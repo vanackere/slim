@@ -30,19 +30,20 @@ Use your favorite HTTP verbs:
 
 Bind parameters using either Sinatra-like patterns or regular expressions:
 
-	m.Get("/hello/:name", func(c context.Context, w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, %s!", c.URLParams["name"])
+	m.Get("/hello/:name", func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello, %s!", web.URLParams(ctx)["name"])
 	})
 	pattern := regexp.MustCompile(`^/ip/(?P<ip>(?:\d{1,3}\.){3}\d{1,3})$`)
-	m.Get(pattern, func(c context.Context, w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Info for IP address %s:", c.URLParams["ip"])
+	m.Get(pattern, func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Info for IP address %s:", web.URLParams(ctx)["ip"])
 	})
 
 Middleware are functions that wrap http.Handlers, just like you'd use with raw
 net/http. Middleware functions can optionally take a context parameter, which
 will be threaded throughout the middleware stack and to the final handler, even
 if not all of these things support contexts. Middleware are encouraged to use
-the Env parameter to pass data to other middleware and to the final handler:
+the context.Context parameter (see http://blog.golang.org/context) to pass data
+to other middleware and to the final handler:
 
 	m.Use(func(h http.Handler) http.Handler {
 		handler := func(w http.ResponseWriter, r *http.Request) {
@@ -52,24 +53,23 @@ the Env parameter to pass data to other middleware and to the final handler:
 		}
 		return http.HandlerFunc(handler)
 	})
-	m.Use(func(c context.Context, h http.Handler) http.Handler {
-		handler := func(w http.ResponseWriter, r *http.Request) {
+
+	type key int // private key type to ensure isolation with other middlewares
+	const userKey key = 0
+
+	m.Use(func(h web.Handler) web.Handler {
+		handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 			cookie, err := r.Cookie("user")
 			if err == nil {
-				// Consider using the middleware EnvInit instead
-				// of repeating the below check
-				if c.Env == nil {
-					c.Env = make(map[string]interface{})
-				}
-				c.Env["user"] = cookie.Value
+				ctx = context.WithValue(ctx, userKey, cookie.Value)
 			}
-			h.ServeHTTP(w, r)
+			h.ServeHTTPC(ctx, w, r)
 		}
-		return http.HandlerFunc(handler)
+		return web.HandlerFunc(handler)
 	})
 
-	m.Get("/baz", func(c context.Context, w http.ResponseWriter, r *http.Request) {
-		if user, ok := c.Env["user"].(string); ok {
+	m.Get("/baz", func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+		if user, ok := ctx.Value(userKey).(string); ok {
 			w.Write([]byte("Hello " + user))
 		} else {
 			w.Write([]byte("Hello Stranger!"))
