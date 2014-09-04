@@ -136,22 +136,6 @@ type routeMachine struct {
 	routes []route
 }
 
-func matchRoute(route route, m method, ms *methodSet, r *http.Request, c context.Context) (context.Context, bool) {
-	nc, ok := route.pattern.Match(r, c)
-	if !ok {
-		return c, false
-	}
-
-	if m == mOPTIONS {
-		*ms |= methodSet(route.method)
-	}
-
-	if route.method&m != 0 {
-		return nc, true
-	}
-	return nc, false
-}
-
 func (rm routeMachine) route(c context.Context, w http.ResponseWriter, r *http.Request) (methodSet, bool) {
 	m := httpMethod(r.Method)
 	var methods methodSet
@@ -199,9 +183,15 @@ func (rm routeMachine) route(c context.Context, w http.ResponseWriter, r *http.R
 
 		if match && sm&smRoute != 0 {
 			si := rm.sm[i].i
-			if c, ok := matchRoute(rm.routes[si], m, &methods, r, c); ok {
-				rm.routes[si].handler.ServeHTTPC(c, w, r)
-				return 0, true
+			route := &rm.routes[si]
+			if mc, ok := route.pattern.Match(r, c); ok {
+				if route.method&m != 0 {
+					route.handler.ServeHTTPC(mc, w, r)
+					return 0, true
+				}
+				if m == mOPTIONS {
+					methods |= methodSet(route.method)
+				}
 			}
 			i++
 		} else if (match && sm&smJumpOnMatch != 0) ||
