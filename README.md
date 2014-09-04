@@ -1,9 +1,14 @@
-Goji
+Slim
 ====
 
-[![GoDoc](https://godoc.org/github.com/zenazn/goji/web?status.svg)](https://godoc.org/github.com/zenazn/goji/web) [![Build Status](https://travis-ci.org/zenazn/goji.svg)](https://travis-ci.org/zenazn/goji)
+[![GoDoc](https://godoc.org/github.com/vanackere/slim/web?status.svg)](https://godoc.org/github.com/vanackere/slim/web) [![Build Status](https://travis-ci.org/vanackere/slim.svg)](https://travis-ci.org/vanackere/slim)
 
-Goji is a minimalistic web framework that values composability and simplicity.
+Slim is a fork of [Goji][goji], a minimalistic web framework that values composability and simplicity.
+
+The main difference with Goji is that we use the context from package ["code.google.com/p/go.net/context"][context] instead of the custom web.C from Goji.
+
+[goji]: https://github.com/zenazn/goji
+[context]: https://code.google.com/p/go.net/context
 
 Example
 -------
@@ -15,24 +20,26 @@ import (
         "fmt"
         "net/http"
 
+        "code.google.com/p/go.net/context"
         "github.com/vanackere/slim"
         "github.com/vanackere/slim/web"
 )
 
-func hello(c web.C, w http.ResponseWriter, r *http.Request) {
-        fmt.Fprintf(w, "Hello, %s!", c.URLParams["name"])
+func hello(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+        p := web.URLParams(ctx)
+        fmt.Fprintf(w, "Hello, %s!", p["name"])
 }
 
 func main() {
-        goji.Get("/hello/:name", hello)
-        goji.Serve()
+        slim.Get("/hello/:name", hello)
+        slim.Serve()
 }
 ```
 
-Goji also includes a [sample application][sample] in the `example` folder which
-was artificially constructed to show off all of Goji's features. Check it out!
+Slim also includes a [sample application][sample] in the `example` folder which
+was artificially constructed to show off all of Slim's features. Check it out!
 
-[sample]: https://github.com/zenazn/goji/tree/master/example
+[sample]: https://github.com/vanackere/slim/tree/master/example
 
 
 Features
@@ -46,12 +53,12 @@ Features
 * Automatic support for [Einhorn][einhorn], systemd, and [more][bind]
 * [Graceful shutdown][graceful], and zero-downtime graceful reload when combined
   with Einhorn.
-* High in antioxidants
+* Fork of the excellent [Goji framework][goji].
 
 [einhorn]: https://github.com/stripe/einhorn
-[bind]: http://godoc.org/github.com/zenazn/goji/bind
-[graceful]: http://godoc.org/github.com/zenazn/goji/graceful
-[pattern]: https://godoc.org/github.com/zenazn/goji/web#Pattern
+[bind]: http://godoc.org/github.com/vanackere/slim/bind
+[graceful]: http://godoc.org/github.com/vanackere/slim/graceful
+[pattern]: https://godoc.org/github.com/vanackere/slim/web#Pattern
 
 
 Is it any good?
