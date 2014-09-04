@@ -14,7 +14,7 @@ func init() {
 	DefaultMux.Use(middleware.RequestID)
 	DefaultMux.Use(middleware.Logger)
 	DefaultMux.Use(middleware.Recoverer)
-	DefaultMux.Use(middleware.AutomaticOptions)
+	DefaultMux.NotFound(middleware.AutomaticOptions)
 }
 
 // Use appends the given middleware to the default Mux's middleware stack. See
