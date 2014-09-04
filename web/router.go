@@ -378,10 +378,9 @@ func (rt *router) Trace(pattern interface{}, handler interface{}) {
 // Set the fallback (i.e., 404) handler for this mux. See the documentation for
 // type Mux for a description of what types are accepted for handler.
 //
-// As a convenience, the context environment variable "goji.web.validMethods"
-// (also available as the constant ValidMethodsKey) will be set to the list of
-// HTTP methods that could have been routed had they been provided on an
-// otherwise identical request.
+// As a convenience, if the request HTTP method is OPTIONS the list of HTTP methods
+// that could have been routed using the same URL is added to the context. It can
+// then be obtained by the NotFound handler with the ValidMethods function.
 func (rt *router) NotFound(handler interface{}) {
 	rt.notFound = parseHandler(handler)
 }
