@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/zenazn/goji/web"
+	"github.com/vanackere/slim/web"
 )
 
 func TestNoCache(t *testing.T) {

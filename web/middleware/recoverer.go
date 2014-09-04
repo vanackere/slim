@@ -7,7 +7,7 @@ import (
 	"runtime/debug"
 	"code.google.com/p/go.net/context"
 
-	"github.com/zenazn/goji/web"
+	"github.com/vanackere/slim/web"
 )
 
 // Recoverer is a middleware that recovers from panics, logs the panic (and a

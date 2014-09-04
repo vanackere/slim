@@ -8,8 +8,8 @@ Example:
 		"fmt"
 		"net/http"
 
-		"github.com/zenazn/goji"
-		"github.com/zenazn/goji/web"
+		"github.com/vanackere/slim"
+		"github.com/vanackere/slim/web"
 	)
 
 	func hello(c web.C, w http.ResponseWriter, r *http.Request) {
@@ -40,8 +40,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/zenazn/goji/bind"
-	"github.com/zenazn/goji/graceful"
+	"github.com/vanackere/slim/bind"
+	"github.com/vanackere/slim/graceful"
 )
 
 func init() {

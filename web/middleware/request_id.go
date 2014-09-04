@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"code.google.com/p/go.net/context"
 
-	"github.com/zenazn/goji/web"
+	"github.com/vanackere/slim/web"
 )
 
 type ctxkey string

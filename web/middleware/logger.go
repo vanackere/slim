@@ -7,8 +7,8 @@ import (
 	"time"
 	"code.google.com/p/go.net/context"
 
-	"github.com/zenazn/goji/web"
-	"github.com/zenazn/goji/web/util"
+	"github.com/vanackere/slim/web"
+	"github.com/vanackere/slim/web/util"
 )
 
 // Logger is a middleware that logs the start and end of each request, along

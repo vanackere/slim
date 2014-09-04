@@ -6,7 +6,7 @@ import (
 	"testing"
 	"code.google.com/p/go.net/context"
 
-	"github.com/zenazn/goji/web"
+	"github.com/vanackere/slim/web"
 )
 
 func testOptions(m http.Handler, method string, path string) *httptest.ResponseRecorder {

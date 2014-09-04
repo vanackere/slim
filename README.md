@@ -15,8 +15,8 @@ import (
         "fmt"
         "net/http"
 
-        "github.com/zenazn/goji"
-        "github.com/zenazn/goji/web"
+        "github.com/vanackere/slim"
+        "github.com/vanackere/slim/web"
 )
 
 func hello(c web.C, w http.ResponseWriter, r *http.Request) {

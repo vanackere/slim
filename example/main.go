@@ -17,8 +17,8 @@ import (
 
 	"code.google.com/p/go.net/context"
 	"github.com/goji/param"
-	"github.com/zenazn/goji"
-	"github.com/zenazn/goji/web"
+	"github.com/vanackere/slim"
+	"github.com/vanackere/slim/web"
 )
 
 // Note: the code below cuts a lot of corners to make the example app simple.

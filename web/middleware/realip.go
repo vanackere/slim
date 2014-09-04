@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 	"strings"
-	"github.com/zenazn/goji/web"
+	"github.com/vanackere/slim/web"
 
 	"code.google.com/p/go.net/context"
 )

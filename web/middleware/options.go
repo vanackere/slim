@@ -5,7 +5,7 @@ import (
 	"strings"
 	"code.google.com/p/go.net/context"
 
-	"github.com/zenazn/goji/web"
+	"github.com/vanackere/slim/web"
 )
 
 // AutomaticOptions is a NotFound handler that automatically returns an
