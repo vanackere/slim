@@ -5,7 +5,7 @@ Slim
 
 Slim is a fork of [Goji][goji], a minimalistic web framework that values composability and simplicity.
 
-The main difference with Goji is that Slim opted to implement the request context using ["code.google.com/p/go.net/context"][context] instead of the custom web.C from Goji.
+For now the primary difference with Goji is that Slim opted to implement its request context using ["code.google.com/p/go.net/context"][context].
 
 [goji]: https://github.com/zenazn/goji
 [context]: https://code.google.com/p/go.net/context
@@ -45,21 +45,23 @@ was artificially constructed to show off all of Slim's features. Check it out!
 Features
 --------
 
+* Fork of the excellent [Goji framework][goji]
 * Compatible with `net/http`
 * URL patterns (both Sinatra style `/foo/:bar` patterns and regular expressions,
   as well as [custom patterns][pattern])
 * Reconfigurable middleware stack
 * Context/environment object threaded through middleware and handlers
+* Context is the one from "code.google.com/p/go.net/context" (see [here][cblog] for an introduction)
 * Automatic support for [Einhorn][einhorn], systemd, and [more][bind]
 * [Graceful shutdown][graceful], and zero-downtime graceful reload when combined
   with Einhorn.
-* Fork of the excellent [Goji framework][goji].
 
+[cblog]: https://blog.golang.org/context
 [einhorn]: https://github.com/stripe/einhorn
-[bind]: http://godoc.org/github.com/vanackere/slim/bind
-[graceful]: http://godoc.org/github.com/vanackere/slim/graceful
+[bind]: https://godoc.org/github.com/vanackere/slim/bind
+[graceful]: https://godoc.org/github.com/vanackere/slim/graceful
 [pattern]: https://godoc.org/github.com/vanackere/slim/web#Pattern
 
 See [Goji's README][readme] for why Goji's - and therore Slim's - approach is good.
 
-[readme]: https://github.com/vanackere/slim/blob/master/README.md
+[readme]: https://github.com/zenazn/goji/blob/master/README.md
