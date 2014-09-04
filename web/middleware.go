@@ -47,16 +47,16 @@ func (s *cStack) ServeHTTPC(ctx context.Context, w http.ResponseWriter, r *http.
 	s.m.ServeHTTPC(ctx, w, r)
 }
 
-func (s *cStack) toHTTPHandler(h Handler) http.Handler {
+func (s *cStack) toHTTPHandler(h HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		h.ServeHTTPC(s.ctx, w, r)
+		h(s.ctx, w, r)
 	})
 }
 
-func (s *cStack) fromHTTPHandler(h http.Handler) Handler {
+func (s *cStack) fromHTTPHandler(h http.HandlerFunc) HandlerFunc {
 	return HandlerFunc(func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 		s.ctx = ctx
-		h.ServeHTTP(w, r)
+		h(w, r)
 	})
 }
 
@@ -64,10 +64,12 @@ func (m *mStack) appendLayer(fn interface{}) {
 	switch fn.(type) {
 	case func(http.Handler) http.Handler:
 	case func(Handler) Handler:
+	case func(context.Context, http.ResponseWriter, *http.Request, Handler /*next*/):
 	default:
 		log.Panicf(`Unknown middleware type %T. Expected a function `+
 			`with signature "func(http.Handler) http.Handler" or `+
-			`"func(web.Handler) web.Handler".`, fn)
+			`"func(web.Handler) web.Handler" or `+
+			`"func(context.Context, http.ResponseWriter, *http.Request, Handler".`, fn)
 	}
 	m.stack = append(m.stack, fn)
 }
@@ -85,22 +87,33 @@ func (m *mStack) invalidate() {
 	m.pool = makeCPool()
 }
 
+type handlerNext struct {
+	f    func(_ context.Context, _ http.ResponseWriter, _ *http.Request, next Handler)
+	next HandlerFunc
+}
+
+func (h handlerNext) apply(c context.Context, w http.ResponseWriter, r *http.Request) {
+	h.f(c, w, r, h.next)
+}
+
 func (m *mStack) newStack() *cStack {
 	cs := cStack{}
 	router := m.router
 
-	cs.m = HandlerFunc(router.route)
+	h := HandlerFunc(router.route)
 
 	for i := len(m.stack) - 1; i >= 0; i-- {
 		switch fn := m.stack[i].(type) {
 		case func(http.Handler) http.Handler:
-			httphandler := cs.toHTTPHandler(cs.m)
-			cs.m = cs.fromHTTPHandler(fn(httphandler))
+			httphandler := cs.toHTTPHandler(h)
+			h = cs.fromHTTPHandler(fn(httphandler).ServeHTTP)
 		case func(Handler) Handler:
-			cs.m = fn(cs.m)
+			h = fn(h).ServeHTTPC
+		case func(context.Context, http.ResponseWriter, *http.Request, Handler /*next*/):
+			h = HandlerFunc(handlerNext{fn, h}.apply)
 		}
 	}
-
+	cs.m = h
 	return &cs
 }
 

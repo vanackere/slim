@@ -218,20 +218,18 @@ func TestContext(t *testing.T) {
 		if id, ok := c.Value(reqID).(int); !ok || id != 2 {
 			t.Error("Request id was not 2 :(")
 		}
+
 	}
 	st := mStack{
 		stack:  make([]interface{}, 0),
 		pool:   makeCPool(),
 		router: iRouter(router),
 	}
-	st.Use(func(h Handler) Handler {
-		fn := func(c context.Context, w http.ResponseWriter, r *http.Request) {
-			if c.Value(reqID) != nil {
-				t.Error("Expected a clean context")
-			}
-			h.ServeHTTPC(context.WithValue(c, reqID, 1), w, r)
+	st.Use(func(c context.Context, w http.ResponseWriter, r *http.Request, next Handler) {
+		if c.Value(reqID) != nil {
+			t.Error("Expected a clean context")
 		}
-		return HandlerFunc(fn)
+		next.ServeHTTPC(context.WithValue(c, reqID, 1), w, r)
 	})
 
 	st.Use(func(h Handler) Handler {
