@@ -5,9 +5,15 @@ Slim
 
 Slim is a fork of [Goji][goji], a minimalistic web framework that values composability and simplicity.
 
-For now the primary difference with Goji is that Slim opted to implement its request context using ["code.google.com/p/go.net/context"][context].
-
 [goji]: https://github.com/zenazn/goji
+
+Differences with Goji
+---------------------
+
+ * Slim opted to implement its request context using ["code.google.com/p/go.net/context"][context] (see [here][cblog] for an introduction).
+ * Slim middlewares can also be written using the simpler form:
+   - ```func(ctx context.Context, w http.ResponseWriter, r *http.Request, next web.Handler)```
+
 [context]: https://code.google.com/p/go.net/context
 
 Example
@@ -62,6 +68,6 @@ Features
 [graceful]: https://godoc.org/github.com/vanackere/slim/graceful
 [pattern]: https://godoc.org/github.com/vanackere/slim/web#Pattern
 
-See [Goji's README][readme] for why Goji's - and therore Slim's - approach is good.
+See [Goji's README][readme] for why Goji's - and therore Slim's ! - approach is good.
 
 [readme]: https://github.com/zenazn/goji/blob/master/README.md
