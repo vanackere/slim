@@ -3,6 +3,10 @@ package middleware
 import (
 	"net/http"
 	"time"
+
+	"code.google.com/p/go.net/context"
+
+	"github.com/vanackere/slim/web"
 )
 
 // Unix epoch time
@@ -33,23 +37,18 @@ var etagHeaders = []string{
 //      Cache-Control: no-cache, private, max-age=0
 //      X-Accel-Expires: 0
 //      Pragma: no-cache (for HTTP/1.0 proxies/clients)
-func NoCache(h http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-
-		// Delete any ETag headers that may have been set
-		for _, v := range etagHeaders {
-			if r.Header.Get(v) != "" {
-				r.Header.Del(v)
-			}
+func NoCache(ctx context.Context, w http.ResponseWriter, r *http.Request, next web.Handler) {
+	// Delete any ETag headers that may have been set
+	for _, v := range etagHeaders {
+		if r.Header.Get(v) != "" {
+			r.Header.Del(v)
 		}
-
-		// Set our NoCache headers
-		for k, v := range noCacheHeaders {
-			w.Header().Set(k, v)
-		}
-
-		h.ServeHTTP(w, r)
 	}
 
-	return http.HandlerFunc(fn)
+	// Set our NoCache headers
+	for k, v := range noCacheHeaders {
+		w.Header().Set(k, v)
+	}
+
+	next.ServeHTTPC(ctx, w, r)
 }

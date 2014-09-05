@@ -17,26 +17,22 @@ import (
 // print in color, otherwise it will print in black and white.
 //
 // Logger prints a request ID if one is provided.
-func Logger(h web.Handler) web.Handler {
-	fn := func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-		reqID := GetReqID(ctx)
+func Logger(ctx context.Context, w http.ResponseWriter, r *http.Request, next web.Handler) {
+	reqID := GetReqID(ctx)
 
-		printStart(reqID, r)
+	printStart(reqID, r)
 
-		lw := util.WrapWriter(w)
+	lw := util.WrapWriter(w)
 
-		t1 := time.Now()
-		h.ServeHTTPC(ctx, lw, r)
+	t1 := time.Now()
+	next.ServeHTTPC(ctx, lw, r)
 
-		if lw.Status() == 0 {
-			lw.WriteHeader(http.StatusOK)
-		}
-		t2 := time.Now()
-
-		printEnd(reqID, lw, t2.Sub(t1))
+	if lw.Status() == 0 {
+		lw.WriteHeader(http.StatusOK)
 	}
+	t2 := time.Now()
 
-	return web.HandlerFunc(fn)
+	printEnd(reqID, lw, t2.Sub(t1))
 }
 
 func printStart(reqID string, r *http.Request) {

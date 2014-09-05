@@ -15,22 +15,18 @@ import (
 // possible.
 //
 // Recoverer prints a request ID if one is provided.
-func Recoverer(h web.Handler) web.Handler {
-	fn := func(c context.Context, w http.ResponseWriter, r *http.Request) {
-		reqID := GetReqID(c)
+func Recoverer(ctx context.Context, w http.ResponseWriter, r *http.Request, next web.Handler) {
+	reqID := GetReqID(ctx)
 
-		defer func() {
-			if err := recover(); err != nil {
-				printPanic(reqID, err)
-				debug.PrintStack()
-				http.Error(w, http.StatusText(500), 500)
-			}
-		}()
+	defer func() {
+		if err := recover(); err != nil {
+			printPanic(reqID, err)
+			debug.PrintStack()
+			http.Error(w, http.StatusText(500), 500)
+		}
+	}()
 
-		h.ServeHTTPC(c, w, r)
-	}
-
-	return web.HandlerFunc(fn)
+	next.ServeHTTPC(ctx, w, r)
 }
 
 func printPanic(reqID string, err interface{}) {

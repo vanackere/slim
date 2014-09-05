@@ -60,14 +60,10 @@ func init() {
 // where "random" is a base62 random string that uniquely identifies this go
 // process, and where the last number is an atomically incremented request
 // counter.
-func RequestID(h web.Handler) web.Handler {
-	fn := func(ctx context.Context, w http.ResponseWriter, r *http.Request) {
-		myid := atomic.AddUint64(&reqid, 1)
-		c := context.WithValue(ctx, RequestIDKey, fmt.Sprintf("%s-%06d", prefix, myid))
-		h.ServeHTTPC(c, w, r)
-	}
-
-	return web.HandlerFunc(fn)
+func RequestID(ctx context.Context, w http.ResponseWriter, r *http.Request, next web.Handler) {
+	myid := atomic.AddUint64(&reqid, 1)
+	c := context.WithValue(ctx, RequestIDKey, fmt.Sprintf("%s-%06d", prefix, myid))
+	next.ServeHTTPC(c, w, r)
 }
 
 // GetReqID returns a request ID from the given context if one is present.

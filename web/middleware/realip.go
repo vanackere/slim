@@ -30,16 +30,12 @@ var xRealIP = http.CanonicalHeaderKey("X-Real-IP")
 // values from the client, or if you use this middleware without a reverse
 // proxy, malicious clients will be able to make you very sad (or, depending on
 // how you're using RemoteAddr, vulnerable to an attack of some sort).
-func RealIP(h web.Handler) web.Handler {
-	fn := func(c context.Context, w http.ResponseWriter, r *http.Request) {
-		if rip := realIP(r); rip != "" {
-			c = context.WithValue(c, OriginalRemoteAddrKey, r.RemoteAddr)
-			r.RemoteAddr = rip
-		}
-		h.ServeHTTPC(c, w, r)
+func RealIP(ctx context.Context, w http.ResponseWriter, r *http.Request, next web.Handler) {
+	if rip := realIP(r); rip != "" {
+		ctx = context.WithValue(ctx, OriginalRemoteAddrKey, r.RemoteAddr)
+		r.RemoteAddr = rip
 	}
-
-	return web.HandlerFunc(fn)
+	next.ServeHTTPC(ctx, w, r)
 }
 
 func realIP(r *http.Request) string {
