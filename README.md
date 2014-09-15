@@ -12,7 +12,9 @@ Differences with Goji
 
  * Slim opted to implement its request context using ["code.google.com/p/go.net/context"][context] (see [here][cblog] for an introduction).
  * Slim middlewares can also be written using the simpler form:
-   - ```func(ctx context.Context, w http.ResponseWriter, r *http.Request, next web.Handler)```
+``` go 
+func(ctx context.Context, w http.ResponseWriter, r *http.Request, next web.Handler)
+```
 
 [context]: https://code.google.com/p/go.net/context
 
