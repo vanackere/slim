@@ -1,4 +1,4 @@
-package goji
+package slim
 
 import (
 	"github.com/vanackere/slim/web"
