@@ -9,6 +9,9 @@ import (
 	"code.google.com/p/go.net/context"
 )
 
+// mStack is an entire middleware stack. It contains a slice of middleware
+// layers (outermost first) protected by a mutex, a cache of pre-built stack
+// instances, and a final routing function.
 type mStack struct {
 	lock   sync.Mutex
 	stack  []interface{}
@@ -21,21 +24,11 @@ type internalRouter interface {
 }
 
 /*
-Constructing a middleware stack involves a lot of allocations: at the very least
-each layer will have to close over the layer after (inside) it, and perhaps a
-context object. Instead of doing this on every request, let's cache fully
-assembled middleware stacks (the "c" stands for "cached").
-
-A lot of the complexity here (in particular the "pool" parameter, and the
-behavior of release() and invalidate() below) is due to the fact that when the
-middleware stack is mutated we need to create a "cache barrier," where no
-cStack created before the middleware stack mutation is returned to the active
-cache pool (and is therefore eligible for subsequent reuse). The way we do this
-is a bit ugly: each cStack maintains a pointer to the pool it originally came
-from, and will only return itself to that pool. If the mStack's pool has been
-rotated since then (meaning that this cStack is invalid), it will either try
-(and likely fail) to insert itself into the stale pool, or it will drop the
-cStack on the floor.
+cStack is a cached middleware stack instance. Constructing a middleware stack
+involves a lot of allocations: at the very least each layer will have to close
+over the layer after (inside) it and a stack N levels deep will incur at least N
+separate allocations. Instead of doing this on every request, we keep a pool of
+pre-built stacks around for reuse.
 */
 type cStack struct {
 	ctx  context.Context
@@ -137,11 +130,6 @@ func (m *mStack) release(cs *cStack) {
 	cs.pool = nil
 }
 
-// Append the given middleware to the middleware stack. See the documentation
-// for type Mux for a list of valid middleware types.
-//
-// No attempt is made to enforce the uniqueness of middlewares. It is illegal to
-// call this function concurrently with active requests.
 func (m *mStack) Use(middleware interface{}) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -149,13 +137,6 @@ func (m *mStack) Use(middleware interface{}) {
 	m.invalidate()
 }
 
-// Insert the given middleware immediately before a given existing middleware in
-// the stack. See the documentation for type Mux for a list of valid middleware
-// types. Returns an error if no middleware has the name given by "before."
-//
-// No attempt is made to enforce the uniqueness of middlewares. If the insertion
-// point is ambiguous, the first (outermost) one is chosen. It is illegal to
-// call this function concurrently with active requests.
 func (m *mStack) Insert(middleware, before interface{}) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -173,12 +154,6 @@ func (m *mStack) Insert(middleware, before interface{}) error {
 	return nil
 }
 
-// Remove the given middleware from the middleware stack. Returns an error if
-// no such middleware can be found.
-//
-// If the name of the middleware to delete is ambiguous, the first (outermost)
-// one is chosen. It is illegal to call this function concurrently with active
-// requests.
 func (m *mStack) Abandon(middleware interface{}) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
