@@ -11,13 +11,13 @@ type routeMachine struct {
 	routes []route
 }
 
-func (rm routeMachine) route(c context.Context, w http.ResponseWriter, r *http.Request) (methodSet, bool) {
+func (rm routeMachine) route(c context.Context, w http.ResponseWriter, r *http.Request) (methodSet, context.Context, *route) {
 	m := httpMethod(r.Method)
 	var methods methodSet
 	p := r.URL.Path
 
 	if len(rm.sm) == 0 {
-		return methods, false
+		return methods, c, nil
 	}
 
 	var i int
@@ -61,8 +61,7 @@ func (rm routeMachine) route(c context.Context, w http.ResponseWriter, r *http.R
 			route := &rm.routes[si]
 			if mc, ok := route.pattern.Match(r, c); ok {
 				if route.method&m != 0 {
-					route.handler.ServeHTTPC(mc, w, r)
-					return 0, true
+					return 0, mc, route
 				}
 				if m == mOPTIONS {
 					methods |= methodSet(route.method)
@@ -73,7 +72,7 @@ func (rm routeMachine) route(c context.Context, w http.ResponseWriter, r *http.R
 			(!match && sm&smJumpOnMatch == 0) {
 
 			if sm&smFail != 0 {
-				return methods, false
+				return methods, c, nil
 			}
 			i = int(rm.sm[i].i)
 		} else {
@@ -81,5 +80,5 @@ func (rm routeMachine) route(c context.Context, w http.ResponseWriter, r *http.R
 		}
 	}
 
-	return methods, false
+	return methods, c, nil
 }

@@ -106,13 +106,14 @@ func (rt *router) route(c context.Context, w http.ResponseWriter, r *http.Reques
 		rm = rt.compile()
 	}
 
-	ms, ok := rm.route(c, w, r)
-	if ok {
+	methods, rc, route := rm.route(c, w, r)
+	if route != nil {
+		route.handler.ServeHTTPC(rc, w, r)
 		return
 	}
 
-	if ms != 0 {
-		c = context.WithValue(c, validMethodsKey, ms)
+	if methods != 0 {
+		c = context.WithValue(c, validMethodsKey, methods)
 	}
 
 	rt.notFound.ServeHTTPC(c, w, r)
