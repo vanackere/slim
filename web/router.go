@@ -197,8 +197,7 @@ func (rt *router) route(c context.Context, w http.ResponseWriter, r *http.Reques
 }
 
 func (rt *router) handleUntyped(p interface{}, m method, h interface{}) {
-	pat := parsePattern(p)
-	rt.handle(pat, m, parseHandler(h))
+	rt.handle(parsePattern(p), m, parseHandler(h))
 }
 
 func (rt *router) handle(p Pattern, m method, h Handler) {
