@@ -15,7 +15,7 @@ type stringPattern struct {
 	pats     []string
 	breaks   []byte
 	literals []string
-	isPrefix bool
+	wildcard bool
 }
 
 func (s stringPattern) Prefix() string {
@@ -30,8 +30,12 @@ func (s stringPattern) Match(r *http.Request, c context.Context) (context.Contex
 func (s stringPattern) match(r *http.Request, c context.Context, dryrun bool) (context.Context, bool) {
 	path := r.URL.Path
 	var matches map[string]string
-	if !dryrun && len(s.pats) > 0 {
-		matches = make(map[string]string, len(s.pats))
+	if !dryrun {
+		if s.wildcard {
+			matches = make(map[string]string, len(s.pats)+1)
+		} else if len(s.pats) != 0 {
+			matches = make(map[string]string, len(s.pats))
+		}
 	}
 	for i := 0; i < len(s.pats); i++ {
 		sli := s.literals[i]
@@ -58,14 +62,16 @@ func (s stringPattern) match(r *http.Request, c context.Context, dryrun bool) (c
 		path = path[m:]
 	}
 	// There's exactly one more literal than pat.
-	if s.isPrefix {
-		if !strings.HasPrefix(path, s.literals[len(s.pats)]) {
+	tail := s.literals[len(s.pats)]
+	if s.wildcard {
+		if !strings.HasPrefix(path, tail) {
 			return c, false
 		}
-	} else {
-		if path != s.literals[len(s.pats)] {
-			return c, false
+		if !dryrun {
+			matches["*"] = path[len(tail)-1:]
 		}
+	} else if path != tail {
+		return c, false
 	}
 
 	if c == nil || dryrun || len(s.pats) == 0 {
@@ -76,7 +82,7 @@ func (s stringPattern) match(r *http.Request, c context.Context, dryrun bool) (c
 }
 
 func (s stringPattern) String() string {
-	return fmt.Sprintf("stringPattern(%q, %v)", s.raw, s.isPrefix)
+	return fmt.Sprintf("stringPattern(%q)", s.raw)
 }
 
 // "Break characters" are characters that can end patterns. They are not allowed
@@ -88,11 +94,11 @@ const bc = "/.;,"
 var patternRe = regexp.MustCompile(`[` + bc + `]:([^` + bc + `]+)`)
 
 func parseStringPattern(s string) stringPattern {
-	var isPrefix bool
-	// Routes that end in an asterisk ("*") are prefix routes
-	if len(s) > 0 && s[len(s)-1] == '*' {
+	raw := s
+	var wildcard bool
+	if strings.HasSuffix(s, "/*") {
 		s = s[:len(s)-1]
-		isPrefix = true
+		wildcard = true
 	}
 
 	matches := patternRe.FindAllStringSubmatchIndex(s, -1)
@@ -113,10 +119,10 @@ func parseStringPattern(s string) stringPattern {
 	}
 	literals[len(matches)] = s[n:]
 	return stringPattern{
-		raw:      s,
+		raw:      raw,
 		pats:     pats,
 		breaks:   breaks,
 		literals: literals,
-		isPrefix: isPrefix,
+		wildcard: wildcard,
 	}
 }
