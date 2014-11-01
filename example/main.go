@@ -19,56 +19,63 @@ import (
 	"github.com/goji/param"
 	"github.com/vanackere/slim"
 	"github.com/vanackere/slim/web"
+	"github.com/vanackere/slim/web/middleware"
 )
 
 // Note: the code below cuts a lot of corners to make the example app simple.
 
 func main() {
 	// Add routes to the global handler
-	goji.Get("/", Root)
+	slim.Get("/", Root)
 	// Fully backwards compatible with net/http's Handlers
-	goji.Get("/greets", http.RedirectHandler("/", 301))
+	slim.Get("/greets", http.RedirectHandler("/", 301))
 	// Use your favorite HTTP verbs
-	goji.Post("/greets", NewGreet)
+	slim.Post("/greets", NewGreet)
 	// Use Sinatra-style patterns in your URLs
-	goji.Get("/users/:name", GetUser)
+	slim.Get("/users/:name", GetUser)
 	// Goji also supports regular expressions with named capture groups.
-	goji.Get(regexp.MustCompile(`^/greets/(?P<id>\d+)$`), GetGreet)
+	slim.Get(regexp.MustCompile(`^/greets/(?P<id>\d+)$`), GetGreet)
 
 	// Middleware can be used to inject behavior into your app. The
 	// middleware for this application are defined in middleware.go, but you
 	// can put them wherever you like.
-	goji.Use(PlainText)
+	slim.Use(PlainText)
 
 	// If the patterns ends with "/*", the path is treated as a prefix, and
-	// can be used to implement sub-routes. Sub-routes can be used to set
-	// custom middleware on sub-applications. Goji's interfaces are
-	// completely composable.
+	// can be used to implement sub-routes.
 	admin := web.New()
-	goji.Handle("/admin/*", admin)
+	slim.Handle("/admin/*", admin)
+
+	// The standard SubRouter middleware helps make writing sub-routers
+	// easy. Ordinarily, Goji does not manipulate the request's URL.Path,
+	// meaning you'd have to repeat "/admin/" in each of the following
+	// routes. This middleware allows you to cut down on the repetition by
+	// eliminating the shared, already-matched prefix.
+	admin.Use(middleware.SubRouter)
+	// You can also easily attach extra middleware to sub-routers that are
+	// not present on the parent router. This one, for instance, presents a
+	// password prompt to users of the admin endpoints.
 	admin.Use(SuperSecure)
+
+	admin.Get("/", AdminRoot)
+	admin.Get("/finances", AdminFinances)
 
 	// Goji's routing, like Sinatra's, is exact: no effort is made to
 	// normalize trailing slashes.
-	goji.Get("/admin", http.RedirectHandler("/admin/", 301))
-
-	// Set up admin routes. Note that sub-routes do *not* mutate the path in
-	// any way, so we need to supply full ("/admin/" prefixed) paths.
-	admin.Get("/admin/", AdminRoot)
-	admin.Get("/admin/finances", AdminFinances)
+	slim.Get("/admin", http.RedirectHandler("/admin/", 301))
 
 	// Use a custom 404 handler
-	goji.NotFound(NotFound)
+	slim.NotFound(NotFound)
 
 	// Sometimes requests take a long time.
-	goji.Get("/waitforit", WaitForIt)
+	slim.Get("/waitforit", WaitForIt)
 
 	// Call Serve() at the bottom of your main() function, and it'll take
 	// care of everything else for you, including binding to a socket (with
 	// automatic support for systemd and Einhorn) and supporting graceful
 	// shutdown on SIGINT. Serve() is appropriate for both development and
 	// production.
-	goji.Serve()
+	slim.Serve()
 }
 
 // Root route (GET "/"). Print a list of greets.
