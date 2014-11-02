@@ -68,9 +68,7 @@ func (rm routeMachine) route(c context.Context, w http.ResponseWriter, r *http.R
 				}
 			}
 			i++
-		} else if (match && sm&smJumpOnMatch != 0) ||
-			(!match && sm&smJumpOnMatch == 0) {
-
+		} else if match != (sm&smJumpOnMatch == 0) {
 			if sm&smFail != 0 {
 				return methods, c, nil
 			}
