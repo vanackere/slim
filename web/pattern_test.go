@@ -126,6 +126,7 @@ var patternTests = []struct {
 			pt("/a/cat", false, nil),
 			pt("/a/cat/gif", false, nil),
 			pt("/a/cat.", false, nil),
+			pt("/a/cat/dog.gif", false, nil),
 		}},
 
 	// String prefix tests

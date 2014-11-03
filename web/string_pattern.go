@@ -47,7 +47,7 @@ func (s stringPattern) match(r *http.Request, c context.Context, dryrun bool) (c
 		m := 0
 		bc := s.breaks[i]
 		for ; m < len(path); m++ {
-			if path[m] == bc {
+			if path[m] == bc || path[m] == '/' {
 				break
 			}
 		}
