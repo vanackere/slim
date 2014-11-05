@@ -37,7 +37,7 @@ func (s stringPattern) match(r *http.Request, c context.Context, dryrun bool) (c
 			matches = make(map[string]string, len(s.pats))
 		}
 	}
-	for i := 0; i < len(s.pats); i++ {
+	for i, pat := range s.pats {
 		sli := s.literals[i]
 		if !strings.HasPrefix(path, sli) {
 			return c, false
@@ -57,7 +57,7 @@ func (s stringPattern) match(r *http.Request, c context.Context, dryrun bool) (c
 			return c, false
 		}
 		if !dryrun {
-			matches[s.pats[i]] = path[:m]
+			matches[pat] = path[:m]
 		}
 		path = path[m:]
 	}
